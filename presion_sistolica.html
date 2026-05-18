@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presión Sistólica</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #1a1a2e;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .input-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        label {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+        input[type="range"] {
+            width: 400px;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e94560;
+            cursor: pointer;
+        }
+        .value-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e94560;
+            min-width: 80px;
+            text-align: center;
+        }
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+        .result-card h3 {
+            color: #666;
+            font-size: 14px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .result-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a1a2e;
+        }
+        .result-card .label {
+            font-size: 18px;
+            color: #e94560;
+            margin-top: 5px;
+        }
+        .chart-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+        }
+        .chart-title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        canvas {
+            width: 100%;
+            height: 300px;
+        }
+        .action-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            color: white;
+        }
+        .action-box h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        .action-box .action-text {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .action-box .action-detail {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+        .reference-section {
+            margin-top: 30px;
+        }
+        .reference-section h2 {
+            text-align: center;
+            color: #1a1a2e;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .reference-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        .reference-card {
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid;
+            background: #f8f9fa;
+        }
+        .reference-card.muy-bajo {
+            border-color: #3498db;
+        }
+        .reference-card.bajo {
+            border-color: #5dade2;
+        }
+        .reference-card.medio {
+            border-color: #2ecc71;
+        }
+        .reference-card.alto {
+            border-color: #e67e22;
+        }
+        .reference-card.muy-alto {
+            border-color: #e74c3c;
+        }
+        .reference-card .ref-title {
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .reference-card.muy-bajo .ref-title { color: #3498db; }
+        .reference-card.bajo .ref-title { color: #5dade2; }
+        .reference-card.medio .ref-title { color: #2ecc71; }
+        .reference-card.alto .ref-title { color: #e67e22; }
+        .reference-card.muy-alto .ref-title { color: #e74c3c; }
+        .ref-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .muy-bajo .ref-dot { background: #3498db; }
+        .bajo .ref-dot { background: #5dade2; }
+        .medio .ref-dot { background: #2ecc71; }
+        .alto .ref-dot { background: #e67e22; }
+        .muy-alto .ref-dot { background: #e74c3c; }
+        .reference-card .ref-range {
+            font-size: 13px;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            padding: 6px 10px;
+            display: inline-block;
+        }
+        .reference-card .ref-actions {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .reference-card .ref-actions li {
+            font-size: 13px;
+            color: #444;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .reference-card .ref-actions li:last-child {
+            border-bottom: none;
+        }
+        .ref-actions .sub-range {
+            color: #888;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Presión Sistólica</h1>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label>Presión Sistólica mmHg:</label>
+                <input type="range" id="sliderInput" min="60" max="200" value="120">
+                <span class="value-display" id="sliderValue">120</span>
+            </div>
+        </div>
+
+        <div class="results">
+            <div class="result-card">
+                <h3>Función de Membresía</h3>
+                <div class="value" id="membershipFunction"></div>
+                <div class="label" id="membershipLabel">Conjunto Difuso</div>
+            </div>
+            <div class="result-card">
+                <h3>Valor de X</h3>
+                <div class="value" id="xValue"></div>
+                <div class="label" id="xLabel">Grado de Membresía</div>
+            </div>
+            <div class="result-card">
+                <h3>Universo</h3>
+                <div class="value">[60 - 200]</div>
+                <div class="label">Rango de Valores</div>
+            </div>
+        </div>
+
+        <div class="action-box">
+            <h3>Acción de Control</h3>
+            <div class="action-text" id="actionText"></div>
+        </div>
+
+        <div class="reference-section">
+            <h2>Referencia de Funciones de Membresía</h2>
+            <div class="reference-grid">
+
+                <div class="reference-card muy-bajo">
+                    <div class="ref-title">
+                        <span class="ref-dot"></span> Muy Baja
+                    </div>
+                    <div class="ref-range">Rango X: 60 — 80</div>
+                    <ul class="ref-actions">
+                        <li>
+                            <span>Hospitalización urgente</span>
+                            <span class="sub-range">X: 60 – 80</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="reference-card bajo">
+                    <div class="ref-title">
+                        <span class="ref-dot"></span> Baja
+                    </div>
+                    <div class="ref-range">Rango X: 81 — 90</div>
+                    <ul class="ref-actions">
+                        <li>
+                            <span>Monitoreo intensivo</span>
+                            <span class="sub-range">X: 81 – 90</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="reference-card medio">
+                    <div class="ref-title">
+                        <span class="ref-dot"></span> Normal
+                    </div>
+                    <div class="ref-range">Rango X: 91 — 120</div>
+                    <ul class="ref-actions">
+                        <li>
+                            <span>Control Periódico</span>
+                            <span class="sub-range">X: 91 – 110</span>
+                        </li>
+                        <li>
+                            <span>Sin intervención</span>
+                            <span class="sub-range">X: 111 – 120</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="reference-card alto">
+                    <div class="ref-title">
+                        <span class="ref-dot"></span> Alta
+                    </div>
+                    <div class="ref-range">Rango X: 121 — 160</div>
+                    <ul class="ref-actions">
+                        <li>
+                            <span>Ajuste en dieta</span>
+                            <span class="sub-range">X: 121 – 140</span>
+                        </li>
+                        <li>
+                            <span>Medicación leve</span>
+                            <span class="sub-range">X: 141 – 160</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="reference-card muy-alto">
+                    <div class="ref-title">
+                        <span class="ref-dot"></span> Muy Alta
+                    </div>
+                    <div class="ref-range">Rango X: 161 — 200</div>
+                    <ul class="ref-actions">
+                        <li>
+                            <span>Medicación urgente</span>
+                            <span class="sub-range">X: 161 – 200</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sliderInput = document.getElementById('sliderInput');
+        const sliderValue = document.getElementById('sliderValue');
+        const membershipFunction = document.getElementById('membershipFunction');
+        const membershipLabel = document.getElementById('membershipLabel');
+        const xValue = document.getElementById('xValue');
+        const xLabel = document.getElementById('xLabel');
+        const actionText = document.getElementById('actionText');
+
+        const actions = {
+            very_low: 'HOSPITALIZACIÓN URGENTE',
+            low: 'MONITOREO INTENSIVO',
+            normal: 'CONTROL PERIÓDICO',
+            normal_2: 'SIN INTERVENCIÓN',
+            high: 'AJUSTE EN DIETA',
+            high_2: 'MEDICACIÓN LEVE',
+            veryHigh: 'MEDICACIÓN URGENTE',
+        }
+
+        const sets = {
+            MUY_BAJA: {
+                name: 'MUY BAJA',
+                color: '#3498db',
+                points: [
+                    { x: 60, y: 1, action: actions.very_low },
+                    { x: 80, y: 0, action: actions.very_low }
+                ],
+            },
+            BAJA: {
+                name: 'BAJA',
+                color: '#5dade2',
+                points: [
+                    { x: 81, y: 1, action: actions.low },
+                    { x: 90, y: 0, action: actions.low }
+                ],
+            },
+            NORMAL: {
+                name: 'NORMAL',
+                color: '#2ecc71',
+                points: [
+                    { x: 91, y: 1, action: actions.normal },
+                    { x: 110, y: 0.5, action: actions.normal_2 },
+                    { x: 120, y: 0, action: actions.normal_2 }
+                ],
+            },
+            ALTA: {
+                name: 'ALTA',
+                color: '#e67e22',
+                points: [
+                    { x: 121, y: 1, action: actions.high },
+                    { x: 140, y: 0.5, action: actions.high_2 },
+                    { x: 160, y: 0, action: actions.high_2 }
+                ],
+            },
+            MUY_ALTA: {
+                name: 'MUY ALTA',
+                color: '#e74c3c',
+                points: [
+                    { x: 161, y: 1, action: actions.veryHigh },
+                    { x: 200, y: 0, action: actions.veryHigh }
+                ],
+            }
+        };
+
+        function calculateMembership(x) {
+            for (key in sets) {
+                for (let i = 0; i < sets[key].points.length - 1; i++) {
+                    if (x >= sets[key].points[i].x && x <= sets[key].points[i + 1].x) {
+                        const slope = (sets[key].points[i + 1].y - sets[key].points[i].y) / (sets[key].points[i + 1].x - sets[key].points[i].x);
+                        return {
+                            value: sets[key].points[i].y + slope * (x - sets[key].points[i].x),
+                            set: sets[key],
+                            action: sets[key].points[i].action
+                        }
+                    }
+                }
+            }
+        }
+
+        function findBestSet(x) {
+            let bestSet = null;
+            let maxMembership = 0;
+            let membershipValue = 0;
+
+            const membership = calculateMembership(x);
+            return { set: membership.set, membership: membership.value, action: membership.action };
+        }
+
+        function updateUI() {
+            const value = parseInt(sliderInput.value);
+            sliderValue.textContent = value;
+
+            const result = findBestSet(value);
+            const action = result.action
+            
+            membershipFunction.textContent = result.set.name;
+            membershipFunction.style.color = result.set.color;
+            
+            xValue.textContent = result.membership.toFixed(2);
+            xLabel.textContent = `Pertenece a: ${result.set.name}`;
+            
+            actionText.textContent = action;
+
+            const inputX = (value / 100);
+        }
+
+        sliderInput.addEventListener('input', updateUI);
+        
+        updateUI();
+    </script>
+</body>
+</html>
